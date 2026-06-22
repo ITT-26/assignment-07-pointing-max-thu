@@ -4,10 +4,14 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+from mediapipe.framework.formats import landmark_pb2
 
-mp_hands = mp.tasks.vision.HandLandmarksConnections
-mp_drawing = mp.tasks.vision.drawing_utils
-mp_drawing_styles = mp.tasks.vision.drawing_styles
+# mp_hands = mp.tasks.vision.HandLandmarksConnections
+# mp_drawing = mp.tasks.vision.drawing_utils
+# mp_drawing_styles = mp.tasks.vision.drawing_styles
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
 
 MARGIN = 10  # pixels
 FONT_SIZE = 1
@@ -25,12 +29,23 @@ def draw_landmarks_on_image(rgb_image, detection_result):
     handedness = handedness_list[idx]
 
     # Draw the hand landmarks.
+    hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+
+    hand_landmarks_proto.landmark.extend([
+        landmark_pb2.NormalizedLandmark(
+            x=landmark.x,
+            y=landmark.y,
+            z=landmark.z
+        )
+        for landmark in hand_landmarks
+    ])
+
     mp_drawing.draw_landmarks(
-      annotated_image,
-      hand_landmarks,
-      mp_hands.HAND_CONNECTIONS,
-      mp_drawing_styles.get_default_hand_landmarks_style(),
-      mp_drawing_styles.get_default_hand_connections_style()
+        annotated_image,
+        hand_landmarks_proto,
+        mp_hands.HAND_CONNECTIONS,
+        mp_drawing_styles.get_default_hand_landmarks_style(),
+        mp_drawing_styles.get_default_hand_connections_style()
     )
 
     # Get the top left corner of the detected hand's bounding box.
