@@ -24,6 +24,8 @@ alpha = 0.15
 smooth_x = screen_width // 2
 smooth_y = screen_height // 2
 
+pinch_candidate_start = 0
+pinch_confirm_time = 0.12
 click_threshold = 0.05
 pinch_active = False
 drag_started = False
@@ -89,9 +91,24 @@ while cap.isOpened():
         current_time = time.time()
 
         # start pinch
+        # if distance < click_threshold and not pinch_active:
+        #     pinch_active = True
+        #     pinch_start_time = current_time
+
+        # Start pinch only if the pinch is stable for a short time.
+        # This avoids accidental clicks caused by one-frame detection jitter.
         if distance < click_threshold and not pinch_active:
-            pinch_active = True
-            pinch_start_time = current_time
+            if pinch_candidate_start == 0:
+                pinch_candidate_start = current_time
+
+            elif current_time - pinch_candidate_start > pinch_confirm_time:
+                pinch_active = True
+                pinch_start_time = current_time
+                pinch_candidate_start = 0
+
+        elif distance >= click_threshold and not pinch_active:
+            pinch_candidate_start = 0
+            
         # continue pinch
         elif distance < click_threshold and pinch_active:
             pinch_duration = current_time - pinch_start_time
