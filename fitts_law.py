@@ -15,7 +15,7 @@ parser.add_argument("--trials", type=int)
 parser.add_argument("--config", type=str, default="fitts_config.json")
 parser.add_argument("--output", type=str)
 parser.add_argument("--input", type=str, default="mouse")
-parser.add_argument("--latency", type=int, default=500)
+parser.add_argument("--latency", type=int, default=0)
 args = parser.parse_args()
 
 
@@ -58,6 +58,16 @@ class FittsLawApp:
         self.cursor_queue = deque()
         self.cursor_latency = args.latency / 1000.0
         self.click_queue = deque()
+        self.trial_label = pyglet.text.Label(
+            f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}",
+            font_name='Arial',
+            font_size=14,
+            x=10,
+            y=self.window.height - 10,
+            anchor_x='left',
+            anchor_y='top',
+            color=(255, 255, 255, 255)
+        )
 
     def create_targets(self):
         size, distance = self.combinations[self.current_combination_index]
@@ -115,11 +125,13 @@ class FittsLawApp:
             if self.hit_count >= TARGET_AMOUNT:
                 if self.current_trial < self.trials:
                     self.current_trial += 1
+                    self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
                     self.reset()
                 else:
                     if self.current_combination_index + 1 < len(self.combinations):
                         self.current_combination_index += 1
                         self.current_trial = 1
+                        self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
                         self.reset()
                     else:
                         print("All trials completed.")
@@ -155,6 +167,7 @@ class FittsLawApp:
             pyglet.shapes.Circle(
                 target["x"], target["y"], target["size"] // 2, color=target["color"]).draw()
         self.cursor.draw()
+        self.trial_label.draw()
         
     def handle_mouse_motion(self, x, y, dx, dy):
         self.cursor_queue.append((x, y, time.time()))

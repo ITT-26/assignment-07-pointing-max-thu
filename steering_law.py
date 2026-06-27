@@ -15,7 +15,7 @@ parser.add_argument("--trials", type=int)
 parser.add_argument("--config", type=str, default="steering_config.json")
 parser.add_argument("--output", type=str)
 parser.add_argument("--input", type=str, default="mouse")
-parser.add_argument("--latency", type=int, default=100)
+parser.add_argument("--latency", type=int, default=0)
 args = parser.parse_args()
 
 if args.participant is not None:
@@ -58,6 +58,28 @@ class SteeringLawApp:
         self.results = []
         self.cursor_queue = deque()
         self.cursor_latency = args.latency / 1000.0
+        self.trial_label = pyglet.text.Label(
+            f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}",
+            font_name='Arial',
+            font_size=14,
+            x=10,
+            y=self.window.height - 20,
+            anchor_x='left',
+            anchor_y='top',
+            color=(255, 255, 255, 255)
+        )
+        self.feedback_label = pyglet.text.Label(
+            "",
+            font_name='Arial',
+            font_size=14,
+            x=self.window.width // 2,
+            y=self.window.height // 2,
+            anchor_x='center',
+            anchor_y='center',
+            color=(255, 0, 0, 255)
+        )
+        self.feedback_timer = 0
+
 
     def create_path(self):
         length, width = self.combinations[self.current_combination_index]
@@ -75,6 +97,7 @@ class SteeringLawApp:
         self.window.clear()
         line_width = 2
 
+
         pyglet.shapes.Rectangle(
             self.path["x"], self.path["y"], self.path["length"], self.path["width"], color=(128, 128, 128)).draw()
         pyglet.shapes.Rectangle(self.path["x"]-line_width, self.path["y"],
@@ -82,7 +105,9 @@ class SteeringLawApp:
         pyglet.shapes.Rectangle(self.path["x"] + self.path["length"], self.path["y"],
                                 line_width, self.path["width"], color=(0, 255, 0)).draw()
         self.cursor.draw()
-
+        self.trial_label.draw()
+        if time.time() < self.feedback_timer:
+            self.feedback_label.draw()
     def check_inside_path(self, x, y):
         if (self.path["x"] <= x <= self.path["x"] + self.path["length"] and
                 self.path["y"] <= y <= self.path["y"] + self.path["width"]):
@@ -155,6 +180,8 @@ class SteeringLawApp:
                 return
 
             if not self.check_inside_path(x, y):
+                self.feedback_label.text = "Failure!"
+                self.feedback_timer = time.time() + 1.0
                 self.log_results(False, self.start_timestamp, time.time())
                 self.run_started = False
                 self.start_timestamp = None
@@ -177,6 +204,8 @@ class SteeringLawApp:
         self.log_results(True, start_time, end_time)
         self.run_started = False
         self.start_timestamp = None
+        self.feedback_label.text = "Success!"
+        self.feedback_timer = time.time() + 1.0 
         #window_x, window_y = self.window.get_location()
         #start_x = window_x + self.window.width * 0.05
         #start_y = window_y + self.path["y"] + self.path["width"] // 2
@@ -186,10 +215,12 @@ class SteeringLawApp:
         self.last_y = None
         if self.current_trial < self.trials:
             self.current_trial += 1
+            self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
         else:
             if self.current_combination_index + 1 < len(self.combinations):
                 self.current_combination_index += 1
                 self.current_trial = 1
+                self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
                 self.create_path()
             else:
                 self.save_results()
