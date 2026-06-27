@@ -5,6 +5,7 @@ import time
 import csv
 import pyautogui
 from collections import deque
+import random
 
 PARTICIPANT = 1
 TRIALS = 2
@@ -51,6 +52,7 @@ class SteeringLawApp:
         self.current_path_index = 0
         self.combinations = [(length, width)
                              for length in PATH_LENGTH for width in PATH_WIDTH]
+        random.shuffle(self.combinations)
         self.current_combination_index = 0
         self.create_path()
         self.run_started = False
@@ -80,7 +82,6 @@ class SteeringLawApp:
         )
         self.feedback_timer = 0
 
-
     def create_path(self):
         length, width = self.combinations[self.current_combination_index]
         starting_x = self.window.width // 2 - length // 2
@@ -97,7 +98,6 @@ class SteeringLawApp:
         self.window.clear()
         line_width = 2
 
-
         pyglet.shapes.Rectangle(
             self.path["x"], self.path["y"], self.path["length"], self.path["width"], color=(128, 128, 128)).draw()
         pyglet.shapes.Rectangle(self.path["x"]-line_width, self.path["y"],
@@ -108,6 +108,7 @@ class SteeringLawApp:
         self.trial_label.draw()
         if time.time() < self.feedback_timer:
             self.feedback_label.draw()
+
     def check_inside_path(self, x, y):
         if (self.path["x"] <= x <= self.path["x"] + self.path["length"] and
                 self.path["y"] <= y <= self.path["y"] + self.path["width"]):
@@ -150,8 +151,8 @@ class SteeringLawApp:
         delay = now - q_time
         print(delay * 1000)
 
-        self.cursor.x = q_x
-        self.cursor.y = q_y
+        self.cursor.x = x
+        self.cursor.y = y
         """
         x, y = q_x, q_y
         self.cursor_queue.popleft()
@@ -205,22 +206,24 @@ class SteeringLawApp:
         self.run_started = False
         self.start_timestamp = None
         self.feedback_label.text = "Success!"
-        self.feedback_timer = time.time() + 1.0 
-        #window_x, window_y = self.window.get_location()
-        #start_x = window_x + self.window.width * 0.05
-        #start_y = window_y + self.path["y"] + self.path["width"] // 2
-        #pyautogui.moveTo(start_x, start_y)
+        self.feedback_timer = time.time() + 1.0
+        # window_x, window_y = self.window.get_location()
+        # start_x = window_x + self.window.width * 0.05
+        # start_y = window_y + self.path["y"] + self.path["width"] // 2
+        # pyautogui.moveTo(start_x, start_y)
         self.cursor_queue.clear()
         self.last_x = None
         self.last_y = None
-        if self.current_trial < self.trials:
-            self.current_trial += 1
+        if self.current_combination_index < len(self.combinations) - 1:
+            self.current_combination_index += 1
+            self.create_path()
             self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
         else:
-            if self.current_combination_index + 1 < len(self.combinations):
-                self.current_combination_index += 1
-                self.current_trial = 1
+            if self.current_trial < self.trials:
+                self.current_trial += 1
+                self.current_combination_index = 0
                 self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
+                random.shuffle(self.combinations)
                 self.create_path()
             else:
                 self.save_results()
@@ -237,7 +240,7 @@ class SteeringLawApp:
 
 def main():
     app = SteeringLawApp(PARTICIPANT, TRIALS, OUTPUT_FILE)
-    pyglet.clock.schedule_interval(app.update_cursor, 1/500)
+    pyglet.clock.schedule_interval(app.update_cursor, 1/1000)
 
     @app.window.event
     def on_draw():

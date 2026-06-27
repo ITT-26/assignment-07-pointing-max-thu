@@ -5,6 +5,7 @@ import math
 import time
 import csv
 from collections import deque
+import random
 
 PARTICIPANT = 1
 TRIALS = 2
@@ -28,7 +29,7 @@ if args.trials is not None:
 if args.output is not None:
     OUTPUT_FILE = args.output
 else:
-    OUTPUT_FILE = f"fitts_law_{args.input}latency_{args.latency}_participant_{PARTICIPANT}.csv"    
+    OUTPUT_FILE = f"fitts_law_{args.input}_latency_{args.latency}_participant_{PARTICIPANT}.csv"    
 
 with open("fitts_config.json", "r") as f:
     config = json.load(f)
@@ -51,6 +52,7 @@ class FittsLawApp:
         self.current_target_index = 0
         self.combinations = [(size, distance)
                              for size in TARGET_SIZES for distance in TARGET_DISTANCES]
+        random.shuffle(self.combinations)
         self.current_combination_index = 0
         self.create_targets()
         self.hit_count = 0
@@ -104,6 +106,7 @@ class FittsLawApp:
         if selected is None:
             return
         
+        c_time = int(time.time() * 1000)
         current_target = self.targets[self.current_target_index]
         size, distance, target_x, target_y = current_target["size"], current_target["distance"], current_target["x"], current_target["y"]
 
@@ -113,28 +116,20 @@ class FittsLawApp:
 
         if distance_to_target <= size // 2:
             self.hit_count += 1
-            self.hits.append({
-                "iteration": self.current_trial,
-                "pid": self.participant,
-                "num_targets": TARGET_AMOUNT,
-                "target_w": size,
-                "target_d": distance,
-                "target_id": self.hit_count,
-                "timestamp": int(time.time() * 1000)
-            })
+            self.log_results(c_time)
             if self.hit_count >= TARGET_AMOUNT:
-                if self.current_trial < self.trials:
-                    self.current_trial += 1
+                if self.current_combination_index + 1 < len(self.combinations):
+                    self.current_combination_index += 1
                     self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
                     self.reset()
                 else:
-                    if self.current_combination_index + 1 < len(self.combinations):
-                        self.current_combination_index += 1
-                        self.current_trial = 1
+                    if self.current_trial < self.trials:
+                        self.current_trial += 1
+                        random.shuffle(self.combinations)
+                        self.current_combination_index = 0
                         self.trial_label.text = f"Trial: {self.current_trial}/{self.trials} | Combination: {self.current_combination_index + 1}/{len(self.combinations)}"
                         self.reset()
                     else:
-                        print("All trials completed.")
                         self.save_results()
                         pyglet.app.exit()
             else:
@@ -143,6 +138,18 @@ class FittsLawApp:
                 self.current_target_index = next_index
                 self.update_target_color(prev_index)
 
+        
+    
+    def log_results(self, click_time):
+        self.hits.append({
+            "iteration": self.current_trial,
+            "pid": self.participant,
+            "num_targets": TARGET_AMOUNT,
+            "target_w": self.targets[self.current_target_index]["size"],
+            "target_d": self.targets[self.current_target_index]["distance"],
+            "target_id": self.hit_count,
+            "timestamp": click_time,
+        })
     def reset(self):
         self.current_target_index = 0
         self.hit_count = 0
