@@ -7,7 +7,7 @@ import csv
 from collections import deque
 import random
 
-PARTICIPANT = 1
+PARTICIPANT = 3
 TRIALS = 2
 
 parser = argparse.ArgumentParser()
