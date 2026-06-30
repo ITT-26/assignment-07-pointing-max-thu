@@ -3,7 +3,6 @@ import argparse
 import pyglet
 import time
 import csv
-import pyautogui
 from collections import deque
 import random
 
@@ -49,7 +48,6 @@ class SteeringLawApp:
         self.window.set_mouse_visible(False)
         self.cursor = pyglet.shapes.Circle(0, 0, radius=5, color=(0, 0, 255))
         self.path = None
-        self.current_path_index = 0
         self.combinations = [(length, width)
                              for length in PATH_LENGTH for width in PATH_WIDTH]
         random.shuffle(self.combinations)
@@ -84,10 +82,11 @@ class SteeringLawApp:
 
     def create_path(self):
         length, width = self.combinations[self.current_combination_index]
-        
+
         margin = 50
         starting_x = self.window.width // 2 - length // 2
-        starting_y = random.randint(margin, self.window.height - width - margin)
+        starting_y = random.randint(
+            margin, self.window.height - width - margin)
         self.path = {
             "x": starting_x,
             "y": starting_y,
@@ -133,13 +132,18 @@ class SteeringLawApp:
         if not self.cursor_queue:
             return
         # print(len(self.cursor_queue))
+
         """
+        Inital apporach: only update cursor if the first element in the queue has been there for longer than the latency.
+        This approach is not ideal, as the queue can grow very large and so introdcues addiotnal latency
         q_x, q_y, q_time = self.cursor_queue[0]
         now = time.time()
         if now - q_time >= self.cursor_latency:
         """
         selected = None
         now = time.time()
+        # While-loop approach (suggested by ChatGPT) to prevent the event queue from
+        # accumulating and introducing additional latency beyond the configured delay
         while self.cursor_queue:
             q_x, q_y, q_time = self.cursor_queue[0]
             if now - q_time < self.cursor_latency:
@@ -150,11 +154,12 @@ class SteeringLawApp:
 
         x, y, q_time = selected
         delay = now - q_time
-        #print(delay * 1000)
+        # print(delay * 1000)
 
         self.cursor.x = x
         self.cursor.y = y
         """
+        old approch
         x, y = q_x, q_y
         self.cursor_queue.popleft()
         """
@@ -168,8 +173,6 @@ class SteeringLawApp:
         old_y = self.last_y
         self.last_x = x
         self.last_y = y
-
-        # old_x= x - dx
 
         if self.check_crossed_start(old_x, x, y):
             if not self.run_started:
@@ -210,10 +213,6 @@ class SteeringLawApp:
         self.start_timestamp = None
         self.feedback_label.text = "Success!"
         self.feedback_timer = time.time() + 1.0
-        # window_x, window_y = self.window.get_location()
-        # start_x = window_x + self.window.width * 0.05
-        # start_y = window_y + self.path["y"] + self.path["width"] // 2
-        # pyautogui.moveTo(start_x, start_y)
         self.cursor_queue.clear()
         self.last_x = None
         self.last_y = None

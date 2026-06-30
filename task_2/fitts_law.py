@@ -25,13 +25,13 @@ if args.participant is not None:
 
 if args.trials is not None:
     TRIALS = args.trials
-    
+
 if args.output is not None:
     OUTPUT_FILE = args.output
 else:
-    OUTPUT_FILE = f"fitts_law_{args.input}_latency_{args.latency}_participant_{PARTICIPANT}.csv"    
+    OUTPUT_FILE = f"fitts_law_{args.input}_latency_{args.latency}_participant_{PARTICIPANT}.csv"
 
-with open("fitts_config.json", "r") as f:
+with open(args.config, "r") as f:
     config = json.load(f)
 
 TARGET_AMOUNT = config["target_amount"]
@@ -96,19 +96,21 @@ class FittsLawApp:
             return
         selected = None
         now = time.time()
-        
+        # While-loop approach (suggested by ChatGPT) to prevent the event queue from
+        # accumulating and introducing additional latency beyond the configured delay
         while self.click_queue:
             q_x, q_y, q_time, q_button = self.click_queue[0]
             if now - q_time < self.cursor_latency:
                 break
             selected = self.click_queue.popleft()
-        
+
         if selected is None:
             return
-        
+
         c_time = int(time.time() * 1000)
         current_target = self.targets[self.current_target_index]
-        size, distance, target_x, target_y = current_target["size"], current_target["distance"], current_target["x"], current_target["y"]
+        size, distance, target_x, target_y = current_target["size"], current_target[
+            "distance"], current_target["x"], current_target["y"]
 
         dx = self.cursor.x - target_x
         dy = self.cursor.y - target_y
@@ -138,8 +140,6 @@ class FittsLawApp:
                 self.current_target_index = next_index
                 self.update_target_color(prev_index)
 
-        
-    
     def log_results(self, click_time):
         self.hits.append({
             "iteration": self.current_trial,
@@ -152,6 +152,7 @@ class FittsLawApp:
             "input_method": args.input,
             "latency": args.latency
         })
+
     def reset(self):
         self.current_target_index = 0
         self.hit_count = 0
@@ -177,10 +178,10 @@ class FittsLawApp:
                 target["x"], target["y"], target["size"] // 2, color=target["color"]).draw()
         self.cursor.draw()
         self.trial_label.draw()
-        
+
     def handle_mouse_motion(self, x, y, dx, dy):
         self.cursor_queue.append((x, y, time.time()))
-    
+
     def update_cursor_position(self, _dt):
         if not self.cursor_queue:
             return
@@ -208,6 +209,7 @@ class FittsLawApp:
             writer.writeheader()
             writer.writerows(self.hits)
 
+
 def main():
     app = FittsLawApp(PARTICIPANT, TRIALS, OUTPUT_FILE)
 
@@ -219,7 +221,7 @@ def main():
     def on_mouse_press(x, y, button, modifiers):
         app.handle_mouse_press(x, y, button, modifiers)
         pass
-    
+
     @app.window.event
     def on_mouse_motion(x, y, dx, dy):
         app.handle_mouse_motion(x, y, dx, dy)
