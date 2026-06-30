@@ -45,7 +45,7 @@ class SteeringLawApp:
         self.trials = trials
         self.output_file = output_file
         self.current_trial = 1
-        self.window = pyglet.window.Window(800, 600)
+        self.window = pyglet.window.Window(1200, 800)
         self.window.set_mouse_visible(False)
         self.cursor = pyglet.shapes.Circle(0, 0, radius=5, color=(0, 0, 255))
         self.path = None
@@ -75,18 +75,19 @@ class SteeringLawApp:
             font_name='Arial',
             font_size=14,
             x=self.window.width // 2,
-            y=self.window.height // 2,
+            y=self.window.height - 20,
             anchor_x='center',
-            anchor_y='center',
-            color=(255, 0, 0, 255)
+            anchor_y='top',
+            color=(255, 255, 255, 255)
         )
         self.feedback_timer = 0
 
     def create_path(self):
         length, width = self.combinations[self.current_combination_index]
+        
+        margin = 50
         starting_x = self.window.width // 2 - length // 2
-        starting_y = self.window.height // 2 - width // 2
-
+        starting_y = random.randint(margin, self.window.height - width - margin)
         self.path = {
             "x": starting_x,
             "y": starting_y,
@@ -149,7 +150,7 @@ class SteeringLawApp:
 
         x, y, q_time = selected
         delay = now - q_time
-        print(delay * 1000)
+        #print(delay * 1000)
 
         self.cursor.x = x
         self.cursor.y = y

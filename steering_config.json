@@ -1,5 +1,5 @@
 
 {
-    "path_length": [100, 200, 300],
-    "path_width": [50, 70, 90]
+    "path_length": [500, 800, 1000],
+    "path_width": [35, 70, 90]
 }
