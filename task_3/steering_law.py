@@ -7,8 +7,8 @@ import pyautogui
 from collections import deque
 import random
 
-PARTICIPANT = 3
-TRIALS = 2
+PARTICIPANT = 2
+TRIALS = 3
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--participant", type=int)
