@@ -196,9 +196,11 @@ class SteeringLawApp:
             "pid": self.participant,
             "path_length": self.path["length"],
             "path_width": self.path["width"],
-            "start_time": start_time,
-            "end_time": end_time,
+            "start_time": int(start_time * 1000),
+            "end_time": int(end_time * 1000),
             "success": success,
+            "input_method": args.input,
+            "latency": args.latency,
         })
 
     def handle_successful_run(self, start_time, end_time):

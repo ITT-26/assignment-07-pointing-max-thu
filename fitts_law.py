@@ -149,6 +149,8 @@ class FittsLawApp:
             "target_d": self.targets[self.current_target_index]["distance"],
             "target_id": self.hit_count,
             "timestamp": click_time,
+            "input_method": args.input,
+            "latency": args.latency
         })
     def reset(self):
         self.current_target_index = 0
