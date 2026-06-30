@@ -13,7 +13,7 @@ TRIALS = 3
 parser = argparse.ArgumentParser()
 parser.add_argument("--participant", type=int)
 parser.add_argument("--trials", type=int)
-parser.add_argument("--config", type=str, default="fitts_config.json")
+parser.add_argument("--config", type=str, default="task_2/fitts_config.json")
 parser.add_argument("--output", type=str)
 parser.add_argument("--input", type=str, default="mouse")
 parser.add_argument("--latency", type=int, default=0)
