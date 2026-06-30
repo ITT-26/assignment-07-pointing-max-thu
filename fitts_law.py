@@ -224,8 +224,8 @@ def main():
     def on_mouse_motion(x, y, dx, dy):
         app.handle_mouse_motion(x, y, dx, dy)
 
-    pyglet.clock.schedule_interval(app.update_cursor_position, 1/500)
-    pyglet.clock.schedule_interval(app.update_clicks, 1/500)
+    pyglet.clock.schedule_interval(app.update_cursor_position, 1/1000)
+    pyglet.clock.schedule_interval(app.update_clicks, 1/1000)
     pyglet.app.run()
 
 
